@@ -18,7 +18,7 @@ const CONFIG = {
     turnDuration: 60,
     bonusTimeLimit: 10,
     cooldownSensor: 1500,
-    tiltThreshold: 60,
+    tiltThreshold: 30,
     playerColors: ['#FF4D4D', '#4CAF50', '#2196F3', '#FFEB3B', '#00BCD4', '#FF9800', '#E91E63', '#9E9E9E']
 };
 
@@ -231,22 +231,43 @@ function initSensors() {
 }
 
 function handleMotion(event) {
+    // Si está pausado o no hay cartas, no hacer nada
     if (state.isPaused || !state.activeDeck || !state.activeDeck.length) return;
     
+    // Control de tiempo (Cooldown) para no saltar 2 cartas seguidas por error
     const now = Date.now();
     if (now - state.lastSensorTime < CONFIG.cooldownSensor) return;
 
+    // Detectar Gamma (inclinación lateral/vertical en landscape)
     const tilt = event.gamma; 
+    const beta = event.beta;
+
+    // Si el navegador no da datos, salir
     if (tilt === null) return;
 
-    if (tilt > CONFIG.tiltThreshold) {
-        state.lastSensorTime = now;
-        handleGuess(true);
-    } else if (tilt < -CONFIG.tiltThreshold) {
-        state.lastSensorTime = now;
-        handleGuess(false);
+    // DEBUG VISUAL (Opcional: abre la consola del navegador si puedes)
+    // console.log("Tilt:", tilt);
+
+    // LÓGICA CORREGIDA:
+    // Umbral de 30 grados (definido en CONFIG)
+    
+    if (Math.abs(tilt) > CONFIG.tiltThreshold) {
+        state.lastSensorTime = now; // Reiniciar contador de tiempo
+
+        // NOTA IMPORTANTE: 
+        // En la mayoría de móviles:
+        // tilt > 30  --> Inclinado hacia abajo (Acierto)
+        // tilt < -30 --> Inclinado hacia arriba/frente (Pasar)
+        // SI TE FUNCIONA AL REVÉS, CAMBIA EL true POR false ABAJO:
+
+        if (tilt > CONFIG.tiltThreshold) {
+            handleGuess(true); // <--- ACIERTO
+        } else {
+            handleGuess(false); // <--- PASAR
+        }
     }
 }
+
 
 // ==========================================
 // 5. LÓGICA DEL JUEGO (Game Loop)
@@ -562,4 +583,23 @@ function playTone(freq, type, duration) {
 // INICIO DE LA APLICACIÓN
 document.addEventListener('DOMContentLoaded', () => {
     initDataLoading();
+});
+// --- HERRAMIENTA DE DIAGNÓSTICO (Borrar cuando funcione) ---
+const debugBox = document.createElement('div');
+debugBox.style.position = 'fixed';
+debugBox.style.top = '10px';
+debugBox.style.left = '10px';
+debugBox.style.background = 'black';
+debugBox.style.color = '#0f0';
+debugBox.style.fontSize = '20px';
+debugBox.style.zIndex = '10000';
+debugBox.style.padding = '10px';
+document.body.appendChild(debugBox);
+
+window.addEventListener('deviceorientation', (event) => {
+    debugBox.innerHTML = `
+        Gamma: ${event.gamma ? event.gamma.toFixed(0) : 'N/A'}<br>
+        Beta: ${event.beta ? event.beta.toFixed(0) : 'N/A'}<br>
+        Umbral: ${CONFIG.tiltThreshold}
+    `;
 });
