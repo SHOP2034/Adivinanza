@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Charadas Neobrutalistas</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        .cat-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin: 15px 0; max-height: 300px; overflow-y: auto; width: 100%; }
+        .cat-option { display: flex; align-items: center; background: white; border: 3px solid black; padding: 8px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 0.9rem; text-align: left; transition: 0.2s; box-shadow: 3px 3px 0 black; }
+        .cat-option input { margin-right: 10px; accent-color: var(--success); width: 20px; height: 20px; }
+        .cat-option.selected { background: #e0f2fe; transform: translate(1px, 1px); box-shadow: 1px 1px 0 black; }
+        .selection-controls { display: flex; gap: 10px; width: 100%; justify-content: center; margin-bottom: 10px; }
+        .btn-mini { padding: 5px 10px; font-size: 0.8rem; border-width: 2px; box-shadow: 2px 2px 0 black; }
+        #ios-permission-btn { background: #ff4757; color: white; display: none; margin-bottom: 10px; width: 100%; animation: popIn 0.5s; }
+    </style>
+</head>
+<body>
+    
+    <section id="setup-screen" class="screen active">
+        <h1>Charadas<br>Extremas</h1>
+        
+        <div class="control-group" style="max-width: 400px;">
+            <label>Selecciona Categorías:</label>
+            
+            <div class="selection-controls">
+                <button class="btn-mini" onclick="toggleAllCategories(true)">Todas</button>
+                <button class="btn-mini" onclick="toggleAllCategories(false)">Ninguna</button>
+            </div>
+
+            <div id="categories-grid" class="cat-grid">
+                <p>Cargando mazos...</p>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <label>Jugadores:</label>
+            <div class="stepper">
+                <button onclick="adjustPlayers(-1)">-</button>
+                <span id="player-count-display">2</span>
+                <button onclick="adjustPlayers(1)">+</button>
+            </div>
+        </div>
+
+        <button id="ios-permission-btn" onclick="requestSensorPermission()">
+            🔓 Habilitar Movimiento (iOS)
+        </button>
+
+        <button class="btn-primary" onclick="startGame()">¡JUGAR!</button>
+        <p style="margin-top:20px; font-size: 0.9rem; opacity: 0.7;">Ponte el celular en la frente</p>
+    </section>
+
+    <section id="game-screen" class="screen hidden">
+        <div class="top-bar">
+            <button class="btn-icon" onclick="togglePause()">⏸</button>
+            <div class="player-badge" id="current-player-badge">Jugador 1</div>
+            <button class="btn-icon" onclick="toggleFullScreen()">⛶</button>
+        </div>
+
+        <div class="progress-container">
+            <div id="progress-bar"></div>
+        </div>
+        <div class="timer-text"><span id="time-left">60</span>s</div>
+
+        <div id="card-area">
+            <div id="pause-overlay" class="hidden">PAUSA</div>
+            <img id="card-image" class="hidden" src="" alt="Carta">
+            <div id="card-text" class="hidden">PREPARADO...</div>
+            <div id="feedback-animation" class="hidden"></div>
+        </div>
+
+        <div class="controls-game">
+            <button id="btn-wrong" class="btn-secondary" onclick="handleGuess(false)">PASAR (Arriba)</button>
+            <button id="btn-correct" class="btn-primary" onclick="handleGuess(true)">ACERTO (Abajo)</button>
+        </div>
+        <p style="text-align:center; font-size:0.8rem; margin-top:5px; font-weight:bold;">Inclina el móvil para jugar</p>
+    </section>
+
+    <div id="turn-modal" class="modal-overlay hidden">
+        <div class="modal-box">
+            <h2 id="modal-title">¡Tiempo!</h2>
+            <p id="modal-message">Turno finalizado</p>
+            <div class="modal-score">Puntos turno: <span id="modal-points">0</span></div>
+            <button class="btn-primary" onclick="confirmEndTurn()">Siguiente Jugador ➡</button>
+        </div>
+    </div>
+
+    <section id="results-screen" class="screen hidden">
+        <h2>🏆 Ranking Final</h2>
+        <div id="leaderboard-list"></div>
+        <button class="btn-primary" onclick="resetGame()">Jugar de Nuevo</button>
+    </section>
+
+    <script src="app.js"></script>
+</body>
+</html>
