@@ -603,3 +603,26 @@ window.addEventListener('deviceorientation', (event) => {
         Umbral: ${CONFIG.tiltThreshold}
     `;
 });
+async function requestSensorPermission() {
+    // 1. Caso para iPhone (iOS 13+)
+    if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+        try {
+            const permissionState = await DeviceOrientationEvent.requestPermission();
+            if (permissionState === 'granted') {
+                initSensors();
+                document.getElementById('btn-permisos').style.display = 'none';
+                alert("✅ Sensores activados");
+            } else {
+                alert("❌ Permiso denegado");
+            }
+        } catch (error) {
+            console.error(error);
+        }
+    } 
+    // 2. Caso para Android y otros
+    else {
+        initSensors();
+        document.getElementById('btn-permisos').style.display = 'none';
+        alert("✅ Sensores listos");
+    }
+}
